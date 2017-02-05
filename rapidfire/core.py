@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 import termios
@@ -10,6 +9,7 @@ import types
 from .ansi import term
 from .terminalsize import get_terminal_size
 from .parser import ParsePyFile
+from .config import Config
 
 ESC = '\x1b'
 FINISH_KEYS = ['q', ESC]
@@ -28,7 +28,7 @@ class Core(object):
         function_name = function.__name__
 
         try:
-            _ = (x for x in data)
+            _ = (x for x in data)  # noqa
         except:
             sys.exit()
 
@@ -41,17 +41,18 @@ class Core(object):
 class RapidFire(object):
 
     def __init__(self, output_encodeing, data, function_name, input_encoding='utf-8', kwargs=None):
-        self.pos = 0
         self.data = data
         self.function_name = function_name
-        self.width, self.height = get_terminal_size()
         self.output_encodeing = output_encodeing
         self.input_encoding = input_encoding
-        self.args_for_action = None
         self.max_lines_range = len(data)
         self.next_action = kwargs.get('next_action')
 
     def __enter__(self):
+        self.pos = 0
+        self.width, self.height = get_terminal_size()
+        self.args_for_action = None
+        self.config = Config()
         ttyname = get_ttyname()
         sys.stdin = open(ttyname)
 
@@ -60,7 +61,7 @@ class RapidFire(object):
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
         if self.next_action:
-            rf_parser = ParsePyFile('/Users/wan/rffile.py')
+            rf_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
             rf_parser.set_code_obj(self.next_action)
             for const in rf_parser.code_obj.co_consts:
                 # XXX get only action method code object
@@ -82,10 +83,10 @@ class RapidFire(object):
 
                 if ch in FINISH_KEYS:
                     break
-                elif ch == 'k':
+                elif ch == self.config.keymap['UP']:
                     if self.pos > 0:
                         self.pos -= 1
-                elif ch == 'j':
+                elif ch == self.config.keymap['DOWN']:
                     if self.pos < self.max_lines_range - 1:
                         self.pos += 1
                 elif ch == '\n':
@@ -106,11 +107,12 @@ class RapidFire(object):
             sys.stdout.write('\x1b[0K')
             if idx == self.pos:
                 sys.stdout.write(term(line,
-                                      'yellow',
-                                      'purple',
-                                      'bold') + '\n' + reset + '\r')
+                                      self.config.select_line_attribute,
+                                      ) + '\n' + reset + '\r')
             else:
-                sys.stdout.write(line + '\n' + reset + '\r')
+                sys.stdout.write(term(line,
+                                      self.config.normal_line_attribute,
+                                      ) + '\n' + reset + '\r')
         sys.stdout.write('\x1b[{}A'.format(self.max_lines_range))
 
     def execute_command(self):
@@ -119,6 +121,7 @@ class RapidFire(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=True,
+            executable=self.config.shell,
         )
         (output, err) = p.communicate()
         if err:

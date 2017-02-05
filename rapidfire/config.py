@@ -13,18 +13,16 @@ SHELL = /bin/sh
 [normal line attribute]
 FG_COLOR = white
 BG_COLOR = black
-BOLD = False
-UNDERLINE = False
+STYLE =
 
 [select line attribute]
-FG_COLOR = white
-BG_COLOR = black
-BOLD = True
-UNDERLINE = True
+FG_COLOR = yellow
+BG_COLOR = red
+STYLE = bold
 
 [keymap]
-UP = move_up
-DOWN = move_down
+UP = k
+DOWN = j
 QUITE = q, ESC
 ENTER = ENTER
 """
@@ -58,11 +56,11 @@ class Config(object):
 
     @property
     def normal_line_attribute(self):
-        return self.config['normal_line_attribute']
+        return self.config['normal line attribute']
 
     @property
     def select_line_attribute(self):
-        return self.config['select_line_attribute']
+        return self.config['select line attribute']
 
     @property
     def keymap(self):

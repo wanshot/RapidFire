@@ -31,28 +31,30 @@ BACKGROUND_COLORS = {
 }
 
 
-def term(message, fg_color=None, bg_color=None, style=None):
+def term(message, section):
     """Display with ANSI Attribute
 
     :param str message: String to be displayed
-    :param str fg_color: text color
-    :param str bg_color: background color
-    :param str style: text style
+    :param dict section: attribute
     :return str: escape sequence character
     """
-    style = STYLE.get(style, 0)
-    fg_color = FOREGROUND_COLORS.get(fg_color, 30)
-    bg_color = BACKGROUND_COLORS.get(bg_color, 40)
+    style = [0]
+    if section.get('style'):
+        style = [STYLE.get(s) for s in section['style'].replace(' ', '').split(',')]
 
-    highlight = ';'.join(map(str, [style, fg_color, bg_color]))
+    attribute = [
+        FOREGROUND_COLORS.get(section.get('fg_color'), 30),
+        BACKGROUND_COLORS.get(section.get('bg_color'), 40)
+    ] + style
 
-    return u'\x1b[{attribute}m{char}\x1b[0m'.format(attribute=highlight,
-                                                    char=message)
+    highlight = ';'.join(map(str, attribute))
+
+    return u'\x1b[{attribute}m{char}\x1b[0m'.format(attribute=highlight, char=message)
 
 if __name__ == '__main__':
     for s, _ in sorted(STYLE.items(), key=lambda x: x[1]):
         for fc, _ in sorted(BACKGROUND_COLORS.items(), key=lambda x: x[1]):
             tmp = []
             for bc, _ in sorted(BACKGROUND_COLORS.items(), key=lambda x: x[1]):
-                tmp.append(term('test', fg_color=fc, bg_color=bc, style=s))
+                tmp.append(term('test', {'fg_color': fc, 'bg_color': bc, 'style': s}))
             print(' '.join(tmp))

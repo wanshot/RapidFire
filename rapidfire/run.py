@@ -16,8 +16,8 @@ def get_argparser():
     parser = argparse.ArgumentParser(
         usage='RapidFire',
         description=textwrap.dedent(
-            term(LOGAPPNAME, fg_color='red') + '\n' +
-            term(__logo__, fg_color='red', style='bold')
+            term(LOGAPPNAME, {'fg_color': 'red'}) + '\n' +
+            term(__logo__, {'fg_color': 'red', 'style': 'bold'})
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
