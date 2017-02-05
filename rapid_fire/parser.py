@@ -25,8 +25,10 @@ class ParsePyFile(object):
 
             def visit_FunctionDef(self, node):
                 function_info.append((node.name, ast.get_docstring(node)))
+
         exprs = ast.parse(self.load_pyfile(), self.file_path)
         _Transform().visit(exprs)
+        self.attribute_settings = compile(exprs, self.file_path, 'exec')
         # TODO funcitons overlap raise
         return function_info
 

@@ -1,1 +1,1 @@
-# rapid_fire
+# RapidFire
