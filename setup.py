@@ -18,9 +18,9 @@ setup(
     classifiers=[
         'License :: OSI Approved :: MIT License',
     ],
-    packages=['rapid_fire'],
+    packages=['rapidfire'],
     entry_points={
-        'console_scripts': ['rf = rapid_fire.run:main']
+        'console_scripts': ['rf = rapidfire.run:main']
     },
     install_requires=['argparse', 'six'],
 )

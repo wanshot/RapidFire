@@ -2,7 +2,7 @@
 
 class BaseError(Exception):
     """
-    Baseclass for all kunai errors.
+    Baseclass for all RapidFire errors.
     """
     pass
 

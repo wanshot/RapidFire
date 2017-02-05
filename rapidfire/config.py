@@ -2,7 +2,7 @@
 import os
 from configparser import ConfigParser
 
-RAPIDFIRE_ROOT_DIRECTORY = os.path.expanduser('~/.rapid_fire.d/')
+RAPIDFIRE_ROOT_DIRECTORY = os.path.expanduser('~/.rapidfire.d/')
 RAPIDFIRE_CONF_PATH = RAPIDFIRE_ROOT_DIRECTORY + 'rfrc'
 
 DEFAULT_CONFIG = """
@@ -30,7 +30,7 @@ ENTER = ENTER
 """
 
 
-def make_rapid_fire_config():
+def make_rapidfire_config():
     if not os.path.exists(RAPIDFIRE_ROOT_DIRECTORY):
         os.makedirs(RAPIDFIRE_ROOT_DIRECTORY)
     with open(RAPIDFIRE_CONF_PATH, 'w+') as f:
@@ -41,7 +41,7 @@ class Config(object):
 
     def __init__(self):
         if not os.path.exists(RAPIDFIRE_ROOT_DIRECTORY):
-            exit('~/.rapid_fire.d is not found')
+            exit('~/.rapidfire.d is not found')
         if not os.path.isfile(RAPIDFIRE_CONF_PATH):
             exit('rfrc is not found')
 

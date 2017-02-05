@@ -11,7 +11,7 @@ LOGAPPNAME = 'Selection Display Interface'
 
 
 def get_argparser():
-    from rapid_fire import __version__, __logo__
+    from rapidfire import __version__, __logo__
 
     parser = argparse.ArgumentParser(
         usage='RapidFire',
