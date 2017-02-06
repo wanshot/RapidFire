@@ -27,6 +27,10 @@ QUITE = q, ESC
 ENTER = ENTER
 """
 
+KEY_MAP = {
+    'ESC': '\x1b'
+}
+
 
 def make_rapidfire_config():
     if not os.path.exists(RAPIDFIRE_ROOT_DIRECTORY):
@@ -46,6 +50,15 @@ class Config(object):
         self.config = ConfigParser()
         self.config.read(RAPIDFIRE_CONF_PATH)
 
+    def get_key(self, key):
+        keys = []
+        for key in self.config['keymap'][key].replace(' ', '').split(','):
+            if KEY_MAP.get(key):
+                keys.append(KEY_MAP[key])
+            else:
+                keys.append(key)
+        return keys
+
     @property
     def rapidfire_pyfile_path(self):
         return self.config.get('base', 'RAPIDFIRE_PYFILE_PATH')
@@ -62,9 +75,6 @@ class Config(object):
     def select_line_attribute(self):
         return self.config['select line attribute']
 
-    @property
-    def keymap(self):
-        return self.config['keymap']
 
 
 if __name__ == "__main__":

@@ -11,9 +11,6 @@ from .terminalsize import get_terminal_size
 from .parser import ParsePyFile
 from .config import Config
 
-ESC = '\x1b'
-FINISH_KEYS = ['q', ESC]
-
 
 def get_locale():
     locale.setlocale(locale.LC_ALL, '')
@@ -41,16 +38,17 @@ class Core(object):
 class RapidFire(object):
 
     def __init__(self, output_encodeing, data, function_name, input_encoding='utf-8', kwargs=None):
+        self.width, self.height = get_terminal_size()
         self.data = data
         self.function_name = function_name
         self.output_encodeing = output_encodeing
         self.input_encoding = input_encoding
-        self.max_lines_range = len(data)
         self.next_action = kwargs.get('next_action')
+        self.max_lines_range = self.height - 1 if len(data) > self.height else len(data)
 
     def __enter__(self):
-        self.pos = 0
-        self.width, self.height = get_terminal_size()
+        self.pos = 1
+        self.has_error = False
         self.args_for_action = None
         self.config = Config()
         ttyname = get_ttyname()
@@ -60,7 +58,7 @@ class RapidFire(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
-        if self.next_action:
+        if self.next_action and not self.has_error:
             rf_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
             rf_parser.set_code_obj(self.next_action)
             for const in rf_parser.code_obj.co_consts:
@@ -81,13 +79,14 @@ class RapidFire(object):
             try:
                 ch = get_char()
 
-                if ch in FINISH_KEYS:
+                if ch in self.config.get_key('QUITE'):
+                    self.has_error = True
                     break
-                elif ch == self.config.keymap['UP']:
-                    if self.pos > 0:
+                elif ch in self.config.get_key('UP'):
+                    if self.pos > 1:
                         self.pos -= 1
-                elif ch == self.config.keymap['DOWN']:
-                    if self.pos < self.max_lines_range - 1:
+                elif ch in self.config.get_key('DOWN'):
+                    if self.pos < self.max_lines_range:
                         self.pos += 1
                 elif ch == '\n':
                     self.args_for_action = self.data[self.pos]
@@ -102,18 +101,20 @@ class RapidFire(object):
     def render(self):
         reset = '\x1b[0K\x1b[0m'
         sys.stdout.write('\x1b[?25l')  # hide cursor
-        for idx, line in enumerate(self.data):
+
+        for idx, line in enumerate(self.data[:self.max_lines_range], start=1):
             line.encode(self.output_encodeing)
             sys.stdout.write('\x1b[0K')
+            eol = '' if self.max_lines_range == idx else '\n'
             if idx == self.pos:
                 sys.stdout.write(term(line,
                                       self.config.select_line_attribute,
-                                      ) + '\n' + reset + '\r')
+                                      ) + eol + reset + '\r')
             else:
                 sys.stdout.write(term(line,
                                       self.config.normal_line_attribute,
-                                      ) + '\n' + reset + '\r')
-        sys.stdout.write('\x1b[{}A'.format(self.max_lines_range))
+                                      ) + eol + reset + '\r')
+        sys.stdout.write('\x1b[{}A'.format(self.max_lines_range - 1))
 
     def execute_command(self):
         p = subprocess.Popen(
