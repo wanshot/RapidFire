@@ -22,5 +22,5 @@ setup(
     entry_points={
         'console_scripts': ['rf = rapidfire.run:main']
     },
-    install_requires=['argparse', 'six'],
+    install_requires=['argparse', 'six', 'wcwidth'],
 )

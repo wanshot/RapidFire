@@ -1,4 +1,3 @@
-
 import os
 from configparser import ConfigParser
 
@@ -74,7 +73,6 @@ class Config(object):
     @property
     def select_line_attribute(self):
         return self.config['select line attribute']
-
 
 
 if __name__ == "__main__":

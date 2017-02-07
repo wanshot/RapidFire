@@ -6,6 +6,8 @@ import subprocess
 import locale
 import types
 
+from wcwidth import wcwidth
+
 from .ansi import term
 from .terminalsize import get_terminal_size
 from .parser import ParsePyFile
@@ -89,7 +91,7 @@ class RapidFire(object):
                     if self.pos < self.max_lines_range:
                         self.pos += 1
                 elif ch == '\n':
-                    self.args_for_action = self.data[self.pos]
+                    self.args_for_action = self.data[self.pos - 1]
                     break
 
                 self.render()
@@ -103,17 +105,20 @@ class RapidFire(object):
         sys.stdout.write('\x1b[?25l')  # hide cursor
 
         for idx, line in enumerate(self.data[:self.max_lines_range], start=1):
-            line.encode(self.output_encodeing)
             sys.stdout.write('\x1b[0K')
             eol = '' if self.max_lines_range == idx else '\n'
+
             if idx == self.pos:
-                sys.stdout.write(term(line,
-                                      self.config.select_line_attribute,
-                                      ) + eol + reset + '\r')
+                sys.stdout.write(
+                    term(self.truncate_string_by_line(line),
+                         self.config.select_line_attribute,
+                         ) + eol + reset + '\r')
             else:
-                sys.stdout.write(term(line,
-                                      self.config.normal_line_attribute,
-                                      ) + eol + reset + '\r')
+                sys.stdout.write(
+                    term(self.truncate_string_by_line(line),
+                         self.config.normal_line_attribute,
+                         ) + eol + reset + '\r')
+
         sys.stdout.write('\x1b[{}A'.format(self.max_lines_range - 1))
 
     def execute_command(self):
@@ -129,6 +134,17 @@ class RapidFire(object):
             sys.stdout.write(err.decode(self.output_encodeing))
         else:
             sys.stdout.write(output.decode(self.output_encodeing))
+
+    def truncate_string_by_line(self, line):
+        counter = 0
+        string = []
+        for s in line:
+            counter += wcwidth(s)
+            if counter > self.width:
+                break
+            else:
+                string.append(s)
+        return ''.join(string)
 
 
 def get_ttyname():
