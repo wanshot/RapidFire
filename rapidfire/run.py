@@ -3,7 +3,7 @@ import textwrap
 
 from .ansi import term
 from .parser import ParsePyFile
-from .config import Config
+from .config import Config, make_rapidfire_config
 
 LOGAPPNAME = 'Selection Display Interface'
 
@@ -32,14 +32,21 @@ def get_argparser():
                         action='store_true',
                         default=False,
                         help='copy to clipboald')
+
+    parser.add_argument('-i', '--init',
+                        action='store_true',
+                        default=False,
+                        help='init rapid fire')
     return parser
 
 
 def main():
     parser = get_argparser()
     args = parser.parse_args()
-    config = Config()
-
-    rf_parser = ParsePyFile(config.rapidfire_pyfile_path)
-    rf_parser.set_code_obj(args.function_name)
-    rf_parser.run()
+    if args.init:
+        make_rapidfire_config()
+    else:
+        config = Config()
+        rap_parser = ParsePyFile(config.rapidfire_pyfile_path)
+        rap_parser.set_code_obj(args.function_name)
+        rap_parser.run()

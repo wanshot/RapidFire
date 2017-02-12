@@ -32,8 +32,8 @@ class Core(object):
             sys.exit()
 
         encoding = get_locale()
-        with RapidFire(encoding, data, function_name, input_encoding, kwargs) as rf:
-            exit_code = rf.loop()
+        with RapidFire(encoding, data, function_name, input_encoding, kwargs) as rap:
+            exit_code = rap.loop()
         sys.exit(exit_code)
 
 
@@ -61,13 +61,13 @@ class RapidFire(object):
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
         if self.next_action and not self.has_error:
-            rf_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
-            rf_parser.set_code_obj(self.next_action)
-            for const in rf_parser.code_obj.co_consts:
+            rap_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
+            rap_parser.set_code_obj(self.next_action)
+            for const in rap_parser.code_obj.co_consts:
                 # XXX get only action method code object
                 if isinstance(const, types.CodeType):
-                    rf_parser.set_rf_module(const)
-                    exec(rf_parser.code_obj, {
+                    rap_parser.set_rap_module(const)
+                    exec(rap_parser.code_obj, {
                         # set globals
                         self.function_name: self.args_for_action,
                     })

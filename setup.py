@@ -20,7 +20,7 @@ setup(
     ],
     packages=['rapidfire'],
     entry_points={
-        'console_scripts': ['rf = rapidfire.run:main']
+        'console_scripts': ['rap = rapidfire.run:main']
     },
     install_requires=['argparse', 'six', 'wcwidth'],
 )

@@ -47,7 +47,7 @@ class ParsePyFile(object):
     def run(self):
         exec(self.code_obj)
 
-    def set_rf_module(self, code_obj):
+    def set_rap_module(self, code_obj):
         """set import module code
         """
         source = self._uncompile(code_obj)
@@ -56,7 +56,7 @@ class ParsePyFile(object):
         exprs = ''
         for line in s:
             exprs += line + '\n'
-        self.code_obj = compile(exprs, '<rf>', 'exec')
+        self.code_obj = compile(exprs, '<rap>', 'exec')
 
     def _uncompile(self, code_obj):
         """uncompile(codeobj) -> source

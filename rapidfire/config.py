@@ -1,8 +1,9 @@
 import os
 from configparser import ConfigParser
 
-RAPIDFIRE_ROOT_DIRECTORY = os.path.expanduser('~/.rapidfire.d/')
-RAPIDFIRE_CONF_PATH = RAPIDFIRE_ROOT_DIRECTORY + 'rfrc'
+HOME = os.path.expanduser('~')
+RAPIDFIRE_CONF_DIRECTORY = os.path.join(HOME, '.rapidfire.d')
+RAPIDFIRE_CONF_PATH = os.path.join(RAPIDFIRE_CONF_DIRECTORY, 'raprc')
 
 DEFAULT_CONFIG = """
 [base]
@@ -32,8 +33,8 @@ KEY_MAP = {
 
 
 def make_rapidfire_config():
-    if not os.path.exists(RAPIDFIRE_ROOT_DIRECTORY):
-        os.makedirs(RAPIDFIRE_ROOT_DIRECTORY)
+    if not os.path.exists(RAPIDFIRE_CONF_DIRECTORY):
+        os.makedirs(RAPIDFIRE_CONF_DIRECTORY)
     with open(RAPIDFIRE_CONF_PATH, 'w+') as f:
         f.write(DEFAULT_CONFIG)
 
@@ -41,13 +42,17 @@ def make_rapidfire_config():
 class Config(object):
 
     def __init__(self):
-        if not os.path.exists(RAPIDFIRE_ROOT_DIRECTORY):
-            exit('~/.rapidfire.d is not found')
+        if not os.path.exists(RAPIDFIRE_CONF_DIRECTORY):
+            exit('No such .rapidfire.d')
         if not os.path.isfile(RAPIDFIRE_CONF_PATH):
-            exit('rfrc is not found')
+            exit('No such raprc')
 
         self.config = ConfigParser()
         self.config.read(RAPIDFIRE_CONF_PATH)
+        if not os.path.isfile(self.rapidfire_pyfile_path):
+            exit('File set in RAPIDFIRE_PYFILE_PATH of raprc can not be found')
+        if not os.access(self.rapidfire_pyfile_path, os.R_OK):
+            exit('%s Permission denied' % self.rapidfire_pyfile_path)
 
     def get_key(self, key):
         keys = []
