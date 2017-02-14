@@ -14,7 +14,7 @@ setup(
     description='',
     license='MIT',
     keywords='',
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     classifiers=[
         'License :: OSI Approved :: MIT License',
     ],
