@@ -56,7 +56,7 @@ API
 
    from rapidfire import render
 
-   @render(next_action='sample1')
+   @render(next_action='sample_method2')
    def sample_method1():
        return ['text1', 'text2', 'text3']
 
