@@ -1,10 +1,10 @@
 RapidFire
 =================
 
-SetUp
+SETUP
 ----------
 
-- init RapidFire
+- Init RapidFire
 
 .. code-block:: shell
 
@@ -17,13 +17,13 @@ SetUp
 
 	RAPIDFIRE_PYFILE_PATH = /path/hoge.py
 
-- create python file
+- Create Python file
 
 .. code-block:: shell
 
    $ vi /path/hoge.py
 
-- edit sample code
+- Edit sample code
 
 .. code-block:: py
 
@@ -33,7 +33,7 @@ SetUp
    def sample():
        return ['text1', 'text2', 'text3']
 
-- run RapidFire
+- Run RapidFire
 
 .. code-block:: shell
 
@@ -50,7 +50,7 @@ API
    - clipboard option
       - Copy the result to the cripboard
 
-- exsample
+- example
 
 .. code-block:: py
 
