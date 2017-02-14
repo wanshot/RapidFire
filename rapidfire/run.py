@@ -28,11 +28,6 @@ def get_argparser():
                         nargs='?',
                         type=str)
 
-    parser.add_argument('-c', '--into_clipboald',
-                        action='store_true',
-                        default=False,
-                        help='copy to clipboald')
-
     parser.add_argument('-i', '--init',
                         action='store_true',
                         default=False,

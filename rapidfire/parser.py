@@ -45,7 +45,10 @@ class ParsePyFile(object):
         self.code_obj = compile(exprs, self.file_path, 'exec')
 
     def run(self):
-        exec(self.code_obj)
+        try:
+            exec(self.code_obj)
+        except Exception as e:
+            print(e)
 
     def set_rap_module(self, code_obj):
         """set import module code

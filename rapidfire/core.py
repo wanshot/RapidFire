@@ -12,6 +12,7 @@ from .ansi import term
 from .terminalsize import get_terminal_size
 from .parser import ParsePyFile
 from .config import Config
+from .clipboard import copy_to_clipboard
 
 
 def get_locale():
@@ -46,11 +47,12 @@ class RapidFire(object):
         self.output_encodeing = output_encodeing
         self.input_encoding = input_encoding
         self.next_action = kwargs.get('next_action')
+        self.clipboard = kwargs.get('clipboard')
         self.max_lines_range = self.height - 1 if len(data) > self.height else len(data)
 
     def __enter__(self):
         self.pos = 1
-        self.has_error = False
+        self.finished = False
         self.args_for_action = None
         self.config = Config()
         ttyname = get_ttyname()
@@ -60,7 +62,7 @@ class RapidFire(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
-        if self.next_action and not self.has_error:
+        if self.next_action and not self.finished:
             rap_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
             rap_parser.set_code_obj(self.next_action)
             for const in rap_parser.code_obj.co_consts:
@@ -72,7 +74,9 @@ class RapidFire(object):
                         self.function_name: self.args_for_action,
                     })
         else:
-            if self.args_for_action:
+            if self.args_for_action and self.clipboard:
+                copy_to_clipboard(self.args_for_action)
+            else:
                 self.execute_command()
 
     def loop(self):
@@ -82,7 +86,7 @@ class RapidFire(object):
                 ch = get_char()
 
                 if ch in self.config.get_key('QUITE'):
-                    self.has_error = True
+                    self.finished = True
                     break
                 elif ch in self.config.get_key('UP'):
                     if self.pos > 1:
