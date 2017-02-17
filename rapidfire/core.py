@@ -62,7 +62,9 @@ class RapidFire(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
-        if self.next_action and not self.finished:
+        if self.finished:
+            pass
+        elif self.next_action and not self.finished:
             rap_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
             rap_parser.set_code_obj(self.next_action)
             for const in rap_parser.code_obj.co_consts:
@@ -73,11 +75,10 @@ class RapidFire(object):
                         # set globals
                         self.function_name: self.args_for_action,
                     })
+        elif self.args_for_action and self.clipboard:
+            copy_to_clipboard(self.args_for_action)
         else:
-            if self.args_for_action and self.clipboard:
-                copy_to_clipboard(self.args_for_action)
-            else:
-                self.execute_command()
+            self.execute_command()
 
     def loop(self):
         self.render()

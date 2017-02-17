@@ -9,7 +9,7 @@ class ParsePyFile(object):
 
     def __init__(self, file_path):
         self.file_path = file_path
-        self.functions = self.load_function()
+        self.functions, self.modules = self.load_code()
         self.code_obj = None
 
     def load_pyfile(self):
@@ -18,19 +18,27 @@ class ParsePyFile(object):
             code = f.read()
         return code
 
-    def load_function(self):
+    def load_code(self):
         function_info = []
+        module_names = []
 
         class _Transform(ast.NodeTransformer):
 
             def visit_FunctionDef(self, node):
                 function_info.append((node.name, ast.get_docstring(node)))
 
+            def visit_ImportFrom(self, node):
+                imp = node.names[0].asname if node.names[0].asname else node.names[0].name
+                module_names.append('from %s import %s' % (node.module, imp))
+
+            def visit_Import(self, node):
+                module_names.append('import %s' % node.names[0].name)
+
         exprs = ast.parse(self.load_pyfile(), self.file_path)
         _Transform().visit(exprs)
         self.attribute_settings = compile(exprs, self.file_path, 'exec')
         # TODO funcitons overlap raise
-        return function_info
+        return function_info, module_names
 
     def set_code_obj(self, func_name):
 
@@ -54,15 +62,15 @@ class ParsePyFile(object):
         """set import module code
         """
         source = self._uncompile(code_obj)
-        s = ['from rapidfire import task']
-        s.extend(source)
+        code = self.modules
+        code.extend(source)
         exprs = ''
-        for line in s:
+        for line in code:
             exprs += line + '\n'
         self.code_obj = compile(exprs, '<rap>', 'exec')
 
     def _uncompile(self, code_obj):
-        """uncompile(codeobj) -> source
+        """uncompile from codeobj to sourcecode
         """
         if code_obj.co_flags & inspect.CO_NESTED or code_obj.co_freevars:
             # XXX

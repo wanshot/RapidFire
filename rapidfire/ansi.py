@@ -49,7 +49,7 @@ def term(message, section):
 
     highlight = ';'.join(map(str, attribute))
 
-    return u'\x1b[{attribute}m{char}\x1b[0m'.format(attribute=highlight, char=message)
+    return '\x1b[{attribute}m{char}\x1b[0m'.format(attribute=highlight, char=message)
 
 if __name__ == '__main__':
     for s, _ in sorted(STYLE.items(), key=lambda x: x[1]):
