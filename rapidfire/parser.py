@@ -54,7 +54,7 @@ class ParsePyFile(object):
         """set import module code
         """
         source = self._uncompile(code_obj)
-        s = ['from rapidfire import render']
+        s = ['from rapidfire import task']
         s.extend(source)
         exprs = ''
         for line in s:

@@ -27,9 +27,9 @@ SETUP
 
 .. code-block:: py
 
-   from rapidfire import render
+   from rapidfire import task
 
-   @render
+   @task
    def sample():
        return ['text1', 'text2', 'text3']
 
@@ -43,7 +43,7 @@ SETUP
 API
 --------------------------
 
-- render
+- task
    - Execute the selected result with Shell
    - next_action option
       - For next_action, specify the function name to be executed next
@@ -54,14 +54,14 @@ API
 
 .. code-block:: py
 
-   from rapidfire import render
+   from rapidfire import task
 
-   @render(next_action='sample_method2')
+   @task(next_action='sample_method2')
    def sample_method1():
        return ['text1', 'text2', 'text3']
 
 
-   @render(clipboard=True)
+   @task(clipboard=True)
    def sample_method2():
        text = sample_method1 # The value selected by sample_method1 is entered
        return ['{} is selected'.format(text)]

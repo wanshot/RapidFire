@@ -15,12 +15,12 @@ __logo__ = """
 from .core import Core
 
 
-def render(*args, **kwargs):
-    # call @render
+def task(*args, **kwargs):
+    # call @task
     if len(args) == 1 and callable(args[0]):
         return Core(args[0], **kwargs)
 
     def inner(obj):
-        # call @render()
+        # call @task()
         return Core(obj, **kwargs)
     return inner
