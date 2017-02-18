@@ -4,7 +4,6 @@ import termios
 import tty
 import subprocess
 import locale
-import types
 
 from wcwidth import wcwidth
 
@@ -67,14 +66,7 @@ class RapidFire(object):
         elif self.next_action and not self.finished:
             rap_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
             rap_parser.set_code_obj(self.next_action)
-            for const in rap_parser.code_obj.co_consts:
-                # XXX get only action method code object
-                if isinstance(const, types.CodeType):
-                    rap_parser.set_rap_module(const)
-                    exec(rap_parser.code_obj, {
-                        # set globals
-                        self.function_name: self.args_for_action,
-                    })
+            rap_parser.run({self.function_name: self.args_for_action})
         elif self.args_for_action and self.clipboard:
             copy_to_clipboard(self.args_for_action)
         else:
