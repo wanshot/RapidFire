@@ -44,4 +44,5 @@ def main():
         config = Config()
         rap_parser = ParsePyFile(config.rapidfire_pyfile_path)
         rap_parser.set_code_obj(args.function_name)
+        rap_parser.set_rap_module()
         rap_parser.run()

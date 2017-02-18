@@ -9,7 +9,7 @@ class ParsePyFile(object):
 
     def __init__(self, file_path):
         self.file_path = file_path
-        self.functions, self.modules = self.load_code()
+        self.funcname2docstring, self.modules = self.load_code()
         self.code_obj = None
 
     def load_pyfile(self):
@@ -19,13 +19,13 @@ class ParsePyFile(object):
         return code
 
     def load_code(self):
-        function_info = []
+        funcname2docstring = []
         module_names = []
 
         class _Transform(ast.NodeTransformer):
 
             def visit_FunctionDef(self, node):
-                function_info.append((node.name, ast.get_docstring(node)))
+                funcname2docstring.append((node.name, ast.get_docstring(node)))
 
             def visit_ImportFrom(self, node):
                 imp = node.names[0].asname if node.names[0].asname else node.names[0].name
@@ -36,9 +36,8 @@ class ParsePyFile(object):
 
         exprs = ast.parse(self.load_pyfile(), self.file_path)
         _Transform().visit(exprs)
-        self.attribute_settings = compile(exprs, self.file_path, 'exec')
         # TODO funcitons overlap raise
-        return function_info, module_names
+        return funcname2docstring, module_names
 
     def set_code_obj(self, func_name):
 
@@ -53,14 +52,15 @@ class ParsePyFile(object):
         self.code_obj = compile(exprs, self.file_path, 'exec')
 
     def run(self):
-        try:
-            exec(self.code_obj)
-        except Exception as e:
-            print(e)
+#         try:
+        exec(self.code_obj)
+#         except Exception as e:
+#             print(e)
 
-    def set_rap_module(self, code_obj):
+    def set_rap_module(self, code_obj=None):
         """set import module code
         """
+        code_obj = code_obj if code_obj else self.code_obj
         source = self._uncompile(code_obj)
         code = self.modules
         code.extend(source)
