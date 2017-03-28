@@ -4,14 +4,16 @@ import termios
 import tty
 import subprocess
 import locale
+import select
 
 from wcwidth import wcwidth
 
-from .ansi import term
+from .ansi import term, ANSI_SEQUENCES
 from .terminalsize import get_terminal_size
 from .parser import ParsePyFile
 from .config import Config
 from .clipboard import copy_to_clipboard
+from .pager import Paginator
 
 
 def get_locale():
@@ -22,37 +24,38 @@ def get_locale():
 
 class Core(object):
 
-    def __init__(self, function, action_name=None, input_encoding=None, **kwargs):
-        data = function()
+    def __init__(self, function, action_name=None, input_encoding=None, **option):
+        selections = function()
         function_name = function.__name__
 
         try:
-            _ = (x for x in data)  # noqa
+            _ = (x for x in selections)  # noqa
         except:
             sys.exit()
 
         encoding = get_locale()
-        with RapidFire(encoding, data, function_name, input_encoding, kwargs) as rap:
+        with RapidFire(encoding, selections, function_name, input_encoding, **option) as rap:
             exit_code = rap.loop()
         sys.exit(exit_code)
 
 
 class RapidFire(object):
 
-    def __init__(self, output_encodeing, data, function_name, input_encoding='utf-8', kwargs=None):
+    def __init__(self, output_encodeing, selections, function_name, input_encoding='utf-8', **option):
         self.width, self.height = get_terminal_size()
-        self.data = data
+        self.selections = selections
+        self.pager = Paginator(selections, self.height - 1)  # subtract prompt line
+        self.page_number = 1
         self.function_name = function_name
         self.output_encodeing = output_encodeing
         self.input_encoding = input_encoding
-        self.next_action = kwargs.get('next_action')
-        self.clipboard = kwargs.get('clipboard')
-        self.max_lines_range = self.height - 1 if len(data) > self.height else len(data)
-
-    def __enter__(self):
+        self.option = option
         self.pos = 1
         self.finished = False
         self.args_for_action = None
+        self.prompt = Prompt()
+
+    def __enter__(self):
         self.config = Config()
         ttyname = get_ttyname()
         sys.stdin = open(ttyname)
@@ -62,61 +65,114 @@ class RapidFire(object):
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout.write('\x1b[?25h\x1b[0J')
         if self.finished:
-            pass
-        elif self.next_action and not self.finished:
+            return
+        elif self.option.get('next_action') and not self.finished:
             rap_parser = ParsePyFile(self.config.rapidfire_pyfile_path)
-            rap_parser.set_code_obj(self.next_action)
+            rap_parser.set_code_obj(self.option.get('next_action'))
             rap_parser.run({self.function_name: self.args_for_action})
-        elif self.args_for_action and self.clipboard:
+        elif self.args_for_action and self.option.get('clipboard'):
             copy_to_clipboard(self.args_for_action)
         else:
             self.execute_command()
 
     def loop(self):
-        self.render()
+        page = self.render()
         while True:
-            try:
-                ch = get_char()
+            on_input, byte = get_byte()
+            if on_input:
+                key = ANSI_SEQUENCES.get(byte)
+                try:
 
-                if ch in self.config.get_key('QUITE'):
-                    self.finished = True
-                    break
-                elif ch in self.config.get_key('UP'):
-                    if self.pos > 1:
-                        self.pos -= 1
-                elif ch in self.config.get_key('DOWN'):
-                    if self.pos < self.max_lines_range:
-                        self.pos += 1
-                elif ch == '\n':
-                    self.args_for_action = self.data[self.pos - 1]
-                    break
+                    # search selections
+                    if key is None:
+                        self.prompt.update(byte.decode(self.output_encodeing))
+                        self.pos = 1
 
-                self.render()
-            except:
-                sys.stdout.write('\x1b[?0h\x1b[0J')
+                    # Exit rapidfire
+                    elif key.name in self.config.get_keys('QUITE'):
+                        self.finished = True
+                        break
 
+                    # Position Up
+                    elif key.name in self.config.get_keys('UP'):
+                        if self.pos > 1:
+                            self.pos -= 1
+                        elif page.has_previous():
+                            self.page_number -= 1
+                            page = self.pager.page(self.page_number)
+                            self.pos = len(page)
+                        else:
+                            self.page_number = page.paginator.num_pages
+                            page = self.pager.page(self.page_number)
+                            self.pos = len(page)
+
+                    # Position Down
+                    elif key.name in self.config.get_keys('DOWN'):
+                        if self.pos < len(page):
+                            self.pos += 1
+                        elif page.has_next():
+                            self.page_number += 1
+                            self.pos = 1
+                        else:
+                            self.page_number = 1
+                            self.pos = 1
+
+                    # Selecting
+                    elif key.name in self.config.get_keys('ENTER') or byte == b'\n':
+                        self.args_for_action = page[self.pos - 1]
+                        break
+
+                    # Erase Input Char
+                    elif key.name in self.config.get_keys('ERASE_CHAR'):
+                        self.prompt.erase_one()
+                        self.pos = 1
+
+                    # Update Screen
+                    page = self.render()
+                except:
+                    sys.stdout.write('\x1b[?0h\x1b[0J')
         return 1
 
     def render(self):
+        self.search(self.prompt.query)
+        page = self.pager.page(self.page_number)
+        # erase behind the cursor and reset attribute
         reset = '\x1b[0K\x1b[0m'
         sys.stdout.write('\x1b[?25l')  # hide cursor
+        sys.stdout.write(reset)        # erase behind the cursor
+        sys.stdout.write(term(
+            self.truncate_string_by_line('input:{}'.format(self.prompt.query)),
+            self.config.normal_line_attribute) + '\n' + reset + '\r')
 
-        for idx, line in enumerate(self.data[:self.max_lines_range], start=1):
-            sys.stdout.write('\x1b[0K')
-            eol = '' if self.max_lines_range == idx else '\n'
+        for idx in range(1, self.height):
+            # subtract prompt line
+            eol = '' if self.height - 1 == idx else '\n'
+            try:
+                if idx == self.pos:
+                    sys.stdout.write(
+                        term(self.truncate_string_by_line(page[idx - 1]),
+                             self.config.select_line_attribute,
+                             ) + eol + reset + '\r')
+                else:
+                    sys.stdout.write(
+                        term(self.truncate_string_by_line(page[idx - 1]),
+                             self.config.normal_line_attribute,
+                             ) + eol + reset + '\r')
+            except IndexError:
+                sys.stdout.write(eol + reset + '\r')
 
-            if idx == self.pos:
-                sys.stdout.write(
-                    term(self.truncate_string_by_line(line),
-                         self.config.select_line_attribute,
-                         ) + eol + reset + '\r')
-            else:
-                sys.stdout.write(
-                    term(self.truncate_string_by_line(line),
-                         self.config.normal_line_attribute,
-                         ) + eol + reset + '\r')
+        # initialize the position of the cursor
+        sys.stdout.write('\x1b[{}A'.format(self.height))
+        return page
 
-        sys.stdout.write('\x1b[{}A'.format(self.max_lines_range - 1))
+    def search(self, query):
+        if query:
+            new_selections = [selection for selection in self.selections
+                              if self.prompt.query in selection]
+        else:
+            new_selections = self.selections
+        self.pager = Paginator(new_selections, self.height - 1)
+        self.page_number = 1
 
     def execute_command(self):
         p = subprocess.Popen(
@@ -144,22 +200,47 @@ class RapidFire(object):
         return ''.join(string)
 
 
+class Prompt(object):
+
+    def __init__(self):
+        self.query = ''
+
+    def update(self, ch):
+        self.query += ch
+
+    def erase_one(self):
+        self.query = self.query[:-1]
+
+    def __repr__(self):
+        return ('{cls.__name__}(query={self.query})'
+                .format(cls=type(self), self=self))
+
+
 def get_ttyname():
     for file_obj in (sys.stdin, sys.stdout, sys.stderr):
         if file_obj.isatty():
             return os.ttyname(file_obj.fileno())
 
 
-def get_char():
+def get_byte():
+    timeout = 0.1
+    on_input = False
+    input_byte = b''
     try:
         from msvcrt import getch
-        return getch()
+        return True, getch()
     except ImportError:
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         try:
             tty.setcbreak(fd)
-            ch = sys.stdin.read(1)
+            readers, _, _ = select.select([fd], [], [], timeout)
+            if readers:
+                on_input = True
+                try:
+                    input_byte = os.read(fd, 1024)
+                except:
+                    on_input = False
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
-        return ch
+        return on_input, input_byte
