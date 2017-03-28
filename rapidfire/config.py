@@ -21,15 +21,12 @@ BG_COLOR = red
 STYLE = bold
 
 [keymap]
-UP = k
-DOWN = j
-QUITE = q, ESC
-ENTER = ENTER
+UP = <Up>
+DOWN = <Down>
+QUITE = <Escape>
+ENTER = <C-J>, <C-M>
+ERASE_CHAR = <Backspace>
 """
-
-KEY_MAP = {
-    'ESC': '\x1b'
-}
 
 
 def make_rapidfire_config():
@@ -54,13 +51,10 @@ class Config(object):
         if not os.access(self.rapidfire_pyfile_path, os.R_OK):
             exit('%s Permission denied' % self.rapidfire_pyfile_path)
 
-    def get_key(self, key):
+    def get_keys(self, operate):
         keys = []
-        for key in self.config['keymap'][key].replace(' ', '').split(','):
-            if KEY_MAP.get(key):
-                keys.append(KEY_MAP[key])
-            else:
-                keys.append(key)
+        for key in self.config['keymap'][operate].replace(' ', '').split(','):
+            keys.append(key)
         return keys
 
     @property
