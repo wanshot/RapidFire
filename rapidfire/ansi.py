@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .keys import Keys
 
 STYLE = {
