@@ -9,7 +9,7 @@ SETUP
 .. code-block:: shell
 
    $ rap --init
-   $ vi /your/home/directory/.rapidfire.d/raprc
+   $ vi /Your/home/directory/.rapidfire.d/raprc
 
 - Set the value in RAPIDFIRE_PYFILE_PATH
 
@@ -17,13 +17,11 @@ SETUP
 
 	RAPIDFIRE_PYFILE_PATH = /path/hoge.py
 
-- Create Python file
+- Edit sample code
 
 .. code-block:: shell
 
    $ vi /path/hoge.py
-
-- Edit sample code
 
 .. code-block:: py
 
@@ -43,20 +41,20 @@ SETUP
 API
 --------------------------
 
-- task
-   - Execute the selected result with Shell
-   - next_action option
-      - For next_action, specify the function name to be executed next
-   - clipboard option
-      - Copy the result to the cripboard
+- rapidfire.task(next_action, clipboard, per_page)
+   - Parameters
+      - next_action - For next_action, specify the function name to be executed next
+      - clipboard option - Copy the result to the cripboard
+      - per_page - Lines per page
 
-- example
+Example
+--------------------------
 
 .. code-block:: py
 
    from rapidfire import task
 
-   @task(next_action='sample_method2')
+   @task(next_action='sample_method2', per_page=2)
    def sample_method1():
        return ['text1', 'text2', 'text3']
 
