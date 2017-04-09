@@ -6,7 +6,8 @@ Unreleased
 
 Release Notes - 2017-04-10
 --------------------------
-- [#14] add tox.ini
+- [#16] Add circle.yml
+- [#14] Add tox.ini
 
 Release 1.0.0 (2017-04-09)
 -----------------------------
