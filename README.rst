@@ -1,6 +1,21 @@
 RapidFire
 =================
 
+.. image:: https://img.shields.io/pypi/v/rapidfire.svg
+   :target: https://pypi.python.org/pypi/rapidfire
+
+.. image:: https://img.shields.io/pypi/l/rapidfire.svg
+   :target: https://pypi.python.org/pypi/rapidfire
+
+.. image:: https://img.shields.io/pypi/wheel/rapidfire.svg
+   :target: https://pypi.python.org/pypi/rapidfire
+
+.. image:: https://img.shields.io/pypi/pyversions/rapidfire.svg
+    :target: https://pypi.python.org/pypi/rapidfire
+
+.. image:: https://circleci.com/gh/wanshot/RapidFire/tree/master.svg?style=svg
+    :target: https://circleci.com/gh/wanshot/RapidFire/tree/master
+
 SETUP
 ----------
 
@@ -46,7 +61,7 @@ API
 - rapidfire.task(next_action, clipboard, per_page)
    - Parameters
       - next_action - For next_action, specify the function name to be executed next
-      - clipboard option - Copy the result to the cripboard
+      - clipboard - Copy the result to the cripboard
       - per_page - Lines per page
 
 Example
@@ -56,12 +71,17 @@ Example
 
    from rapidfire import task
 
+   ### Case.1
    @task(next_action='sample_method2', per_page=2)
    def sample_method1():
        return ['text1', 'text2', 'text3']
 
-
    @task(clipboard=True)
    def sample_method2():
-       text = sample_method1 # The value selected by sample_method1 is entered
-       return ['{} is selected'.format(text)]
+       selected_value = sample_method1 # The value selected by sample_method1 is entered
+       return ['{} is selected'.format(selected_value)]
+
+
+.. code-block:: shell
+
+   $ rap sample_method1

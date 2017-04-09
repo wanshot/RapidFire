@@ -6,6 +6,7 @@ Unreleased
 
 Release Notes - 2017-04-10
 --------------------------
+- [#18] Add badge
 - [#16] Add circle.yml
 - [#14] Add tox.ini
 
