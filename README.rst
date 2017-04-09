@@ -4,10 +4,12 @@ RapidFire
 SETUP
 ----------
 
+
 - Init RapidFire
 
 .. code-block:: shell
 
+   $ pip install rapidfire
    $ rap --init
    $ vi /Your/home/directory/.rapidfire.d/raprc
 

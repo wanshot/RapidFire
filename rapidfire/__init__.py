@@ -1,5 +1,5 @@
-__version__ = '0.0.0'
-__license__ = 'MIT License',
+__version__ = '1.0.0'
+__license__ = 'MIT'
 __author__ = 'wanshot'
 __author_email__ = 'nishikawa0228@sj9.so-net.ne.jp'
 
