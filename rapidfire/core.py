@@ -30,7 +30,7 @@ class Core(object):
 
         try:
             _ = (x for x in selections)  # noqa
-        except:
+        except Exception:
             sys.exit()
 
         encoding = get_locale()
@@ -41,7 +41,8 @@ class Core(object):
 
 class RapidFire(object):
 
-    def __init__(self, output_encodeing, selections, function_name, input_encoding='utf-8', **options):
+    def __init__(self, output_encodeing, selections, function_name,
+                 input_encoding='utf-8', **options):
         self.width, self.height = get_screen_range(options)
         self.selections = selections
         self.pager = Paginator(selections, self.height - 1)  # subtract prompt line
@@ -133,7 +134,7 @@ class RapidFire(object):
 
                     # Update Screen
                     page = self.render()
-                except:
+                except Exception:
                     self.stdout.write('\x1b[?0h\x1b[0J')
         return 1
 
@@ -241,7 +242,7 @@ def get_byte():
                 on_input = True
                 try:
                     input_byte = os.read(fd, 1024)
-                except:
+                except Exception:
                     on_input = False
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
